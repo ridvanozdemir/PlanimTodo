@@ -1,128 +1,48 @@
 package com.ridvan.planim;
 
 import android.Manifest;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.DatePickerDialog;
-import android.app.TimePickerDialog;
+import android.app.*;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.graphics.Typeface;
-import android.os.Build;
-import android.os.Bundle;
-import android.view.Gravity;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.NumberPicker;
-import android.widget.ProgressBar;
-import android.widget.ScrollView;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import android.graphics.*;
+import android.graphics.drawable.GradientDrawable;
+import android.os.*;
+import android.view.*;
+import android.widget.*;
+import java.time.*;
+import java.util.*;
 
 public class MainActivity extends Activity {
-    private FrameLayout host;
-    private String screen = "HOME";
-    private int weekOffset = 0;
+    private FrameLayout host; private String screen="HOME"; private int weekOffset=0; private Button navHome,navReport;
+    private final int BG=Color.rgb(255,248,243),TEXT=Color.rgb(45,41,58),MUTED=Color.rgb(112,106,124),BORDER=Color.rgb(235,226,238),PINK=Color.rgb(255,229,238),MINT=Color.rgb(226,248,236),SKY=Color.rgb(226,241,255),LILAC=Color.rgb(238,232,255),YELLOW=Color.rgb(255,246,202),PEACH=Color.rgb(255,235,220),CORAL=Color.rgb(255,120,137),PURPLE=Color.rgb(137,118,255);
 
-    @Override public void onCreate(Bundle b) {
-        super.onCreate(b);
-        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
-            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1001);
-        ReminderScheduler.scheduleAll(this);
-        buildShell();
-        home();
-    }
+    @Override public void onCreate(Bundle b){super.onCreate(b);if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},1001);ReminderScheduler.scheduleAll(this);shell();home();}
+    @Override public void onBackPressed(){if(!"HOME".equals(screen))home();else super.onBackPressed();}
 
-    @Override public void onBackPressed() {
-        if (!"HOME".equals(screen)) home(); else super.onBackPressed();
-    }
+    private void shell(){LinearLayout root=col();root.setPadding(dp(14),dp(10),dp(14),dp(20));root.setBackgroundColor(BG);host=new FrameLayout(this);root.addView(host,new LinearLayout.LayoutParams(-1,0,1));LinearLayout nav=row();nav.setPadding(dp(8),dp(8),dp(8),dp(8));nav.setGravity(Gravity.CENTER);nav.setBackground(bg(Color.WHITE,BORDER,24));nav.setElevation(dp(6));navHome=navBtn("🏠 Ana Sayfa");navReport=navBtn("📈 Raporlar");navHome.setOnClickListener(v->home());navReport.setOnClickListener(v->report());nav.addView(navHome,new LinearLayout.LayoutParams(0,dp(60),1));spaceH(nav,10);nav.addView(navReport,new LinearLayout.LayoutParams(0,dp(60),1));LinearLayout.LayoutParams np=new LinearLayout.LayoutParams(-1,-2);np.topMargin=dp(8);np.bottomMargin=dp(8);root.addView(nav,np);setContentView(root);}
+    private void navState(){boolean h=!"REPORT".equals(screen);styleNav(navHome,h);styleNav(navReport,!h);}
 
-    private void buildShell() {
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(14), dp(10), dp(14), dp(10));
-        root.setBackgroundColor(Color.rgb(248,248,248));
-        host = new FrameLayout(this);
-        root.addView(host, new LinearLayout.LayoutParams(-1,0,1));
-        LinearLayout nav = row();
-        Button h = btn("Ana Sayfa"), r = btn("Raporlar");
-        h.setOnClickListener(v -> home()); r.setOnClickListener(v -> report());
-        nav.addView(h, new LinearLayout.LayoutParams(0,dp(48),1)); spaceH(nav,8);
-        nav.addView(r, new LinearLayout.LayoutParams(0,dp(48),1));
-        root.addView(nav);
-        setContentView(root);
-    }
+    private void home(){screen="HOME";LinearLayout p=page();p.addView(title("Planım 🌈"));TextView s=text("Minik adımlar, tatlı hedefler ve haftalık mini analizler ✨");s.setTextColor(MUTED);p.addView(s);space(p,16);LinearLayout t=hero("🌟","YAPILACAKLAR","Günlük, haftalık veya aylık tekrarlarını takip et",PINK);t.setOnClickListener(v->tasks());p.addView(t);space(p,14);LinearLayout g=hero("🌱","HEDEFLER","Kısa, orta ve uzun vadeli hedeflerini düzenle",MINT);g.setOnClickListener(v->goals());p.addView(g);space(p,18);List<TaskItem> ts=AppStore.loadTasks(this);List<GoalItem> gs=AppStore.loadGoals(this);int ok=0,active=0;for(TaskItem x:ts)if(TimeUtils.currentCount(x)>=x.requiredCount)ok++;for(GoalItem x:gs)if(!x.completed)active++;LinearLayout c=card(LILAC);c.addView(head("Bugünün minik özeti 💫"));c.addView(text("Yapılacak sayısı: "+ts.size()));c.addView(text("Bu periyotta hedefine ulaşan: "+ok));c.addView(text("Aktif hedef sayısı: "+active));p.addView(c);show(p);navState();}
+    private LinearLayout hero(String e,String h,String s,int color){LinearLayout c=card(color);c.setMinimumHeight(dp(108));TextView i=text(e);i.setTextSize(24);c.addView(i);TextView a=head(h);a.setTextSize(20);c.addView(a);TextView b=text(s);b.setTextColor(MUTED);c.addView(b);return c;}
 
-    private void home() {
-        screen="HOME";
-        LinearLayout p=page();
-        p.addView(title("Planım"));
-        p.addView(text(TimeUtils.formatDate(System.currentTimeMillis())));
-        space(p,18);
-        Button t=primary("YAPILACAKLAR\nGünlük, haftalık veya aylık tekrarlar");
-        Button g=primary("HEDEFLER\nKısa, orta ve uzun vadeli hedefler");
-        t.setOnClickListener(v->tasks()); g.setOnClickListener(v->goals());
-        p.addView(t); space(p,12); p.addView(g); space(p,18);
-        List<TaskItem> ts=AppStore.loadTasks(this); List<GoalItem> gs=AppStore.loadGoals(this);
-        int ok=0, active=0; for(TaskItem x:ts) if(TimeUtils.currentCount(x)>=x.requiredCount) ok++;
-        for(GoalItem x:gs) if(!x.completed) active++;
-        p.addView(cardText("Bugünkü görünüm\nYapılacak: "+ts.size()+"\nPeriyot hedefi tamamlanan: "+ok+"\nAktif hedef: "+active));
-        show(p);
-    }
+    private void tasks(){screen="TASKS";LinearLayout p=page();p.addView(title("Yapılacaklar ✨"));TextView hint=text("Tekrar sayını tamamladıkça ilerleme çubuğu dolacak 💪");hint.setTextColor(MUTED);p.addView(hint);space(p,8);List<TaskItem> list=AppStore.loadTasks(this);if(list.isEmpty()){LinearLayout e=card(PINK);TextView m=text("Henüz yapılacak eklenmedi. İlk mini görevini ekleyebilirsin 🌸");m.setGravity(Gravity.CENTER);e.addView(m);space(e,8);Button add=primary("+ İlk Yapılacağı Ekle");add.setOnClickListener(v->taskTitle());e.addView(add);p.addView(e);}else{for(TaskItem t:list){p.addView(taskCard(t));space(p,10);}Button add=primary("+ Ekle");add.setOnClickListener(v->taskTitle());p.addView(add);}show(p);navState();}
+    private View taskCard(TaskItem t){int n=TimeUtils.currentCount(t),color=TaskItem.WEEKLY.equals(t.period)?SKY:TaskItem.MONTHLY.equals(t.period)?YELLOW:PINK;String em=TaskItem.WEEKLY.equals(t.period)?"📅":TaskItem.MONTHLY.equals(t.period)?"🗓️":"☀️";LinearLayout c=card(color);c.addView(head(em+" "+t.title));TextView meta=text(TimeUtils.periodLabel(t.period)+" • Hedef "+t.requiredCount+" tekrar");meta.setTextColor(MUTED);c.addView(meta);c.addView(head(n+"/"+t.requiredCount+" tamamlandı"));ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(t.requiredCount);bar.setProgress(Math.min(n,t.requiredCount));bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PURPLE));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.WHITE));c.addView(bar,new LinearLayout.LayoutParams(-1,dp(12)));if(t.reminderEnabled){TextView r=text(String.format(Locale.getDefault(),"⏰ Hatırlatma: %02d:%02d",t.reminderHour,t.reminderMinute));r.setTextColor(MUTED);c.addView(r);}space(c,8);LinearLayout rr=row();Button plus=small("+1"),undo=small("Geri al"),del=small("Sil");plus.setEnabled(n<t.requiredCount);undo.setEnabled(n>0);plus.setOnClickListener(v->{List<TaskItem>a=AppStore.loadTasks(this);TaskItem x=findTask(a,t.id);if(x!=null&&TimeUtils.currentCount(x)<x.requiredCount){x.completions.add(System.currentTimeMillis());AppStore.saveTasks(this,a);}tasks();});undo.setOnClickListener(v->{List<TaskItem>a=AppStore.loadTasks(this);TaskItem x=findTask(a,t.id);if(x!=null){long[] q=TimeUtils.currentPeriod(x);for(int i=x.completions.size()-1;i>=0;i--){long z=x.completions.get(i);if(z>=q[0]&&z<=q[1]){x.completions.remove(i);break;}}AppStore.saveTasks(this,a);}tasks();});del.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("Silinsin mi?").setMessage(t.title).setNegativeButton("Vazgeç",null).setPositiveButton("Sil",(d,w)->{List<TaskItem>a=AppStore.loadTasks(this);a.removeIf(x->x.id.equals(t.id));AppStore.saveTasks(this,a);ReminderScheduler.cancel(this,t.id);tasks();}).show());rr.addView(plus,new LinearLayout.LayoutParams(0,dp(48),1));spaceH(rr,6);rr.addView(undo,new LinearLayout.LayoutParams(0,dp(48),1));spaceH(rr,6);rr.addView(del,new LinearLayout.LayoutParams(0,dp(48),1));c.addView(rr);return c;}
+    private void taskTitle(){TaskItem d=new TaskItem();EditText e=new EditText(this);e.setHint("Örn: Spor yap");AlertDialog a=new AlertDialog.Builder(this).setTitle("1/4 • Başlık").setView(e).setNegativeButton("İptal",null).setPositiveButton("Devam",null).create();a.setOnShowListener(x->a.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{String s=e.getText().toString().trim();if(s.isEmpty()){e.setError("Başlık gerekli");return;}d.title=s;a.dismiss();taskPeriod(d);}));a.show();}
+    private void taskPeriod(TaskItem d){String[] x={"☀️ Günlük","📅 Haftalık","🗓️ Aylık"};new AlertDialog.Builder(this).setTitle("2/4 • Periyot").setItems(x,(a,i)->{d.period=i==1?TaskItem.WEEKLY:i==2?TaskItem.MONTHLY:TaskItem.DAILY;taskRepeat(d);}).setNegativeButton("İptal",null).show();}
+    private void taskRepeat(TaskItem d){NumberPicker n=new NumberPicker(this);n.setMinValue(1);n.setMaxValue(10);n.setValue(1);new AlertDialog.Builder(this).setTitle("3/4 • Tekrar").setMessage("Bu periyot içinde kaç kez yapılmalı?").setView(n).setNegativeButton("İptal",null).setPositiveButton("Devam",(a,w)->{d.requiredCount=n.getValue();taskReminder(d);}).show();}
+    private void taskReminder(TaskItem d){String m=TaskItem.WEEKLY.equals(d.period)?"Haftalık hatırlatma pazartesi günü çalışır.":TaskItem.MONTHLY.equals(d.period)?"Aylık hatırlatma ayın 1. günü çalışır.":"Günlük hatırlatma her gün çalışır.";new AlertDialog.Builder(this).setTitle("4/4 • Hatırlatma").setMessage(m).setNegativeButton("Hatırlatma yok",(a,w)->saveTask(d)).setPositiveButton("Saat seç",(a,w)->new TimePickerDialog(this,(v,h,min)->{d.reminderEnabled=true;d.reminderHour=h;d.reminderMinute=min;saveTask(d);},9,0,true).show()).show();}
+    private void saveTask(TaskItem d){List<TaskItem>x=AppStore.loadTasks(this);x.add(d);AppStore.saveTasks(this,x);if(d.reminderEnabled)ReminderScheduler.schedule(this,d);Toast.makeText(this,"Yapılacak eklendi ✨",Toast.LENGTH_SHORT).show();tasks();}
 
-    private void tasks() {
-        screen="TASKS"; LinearLayout p=page(); p.addView(title("Yapılacaklar")); space(p,8);
-        List<TaskItem> list=AppStore.loadTasks(this);
-        if(list.isEmpty()) p.addView(text("Henüz yapılacak eklenmedi."));
-        for(TaskItem t:list){ p.addView(taskCard(t)); space(p,10); }
-        Button add=primary(list.isEmpty()?"+ İlk Yapılacağı Ekle":"+ Ekle"); add.setOnClickListener(v->taskTitle()); p.addView(add); show(p);
-    }
+    private void goals(){screen="GOALS";LinearLayout p=page();p.addView(title("Hedefler 🌱"));TextView hint=text("Hedef tarihini seç; uygulama doğru vadeye otomatik yerleştirsin 💚");hint.setTextColor(MUTED);p.addView(hint);space(p,8);List<GoalItem> all=AppStore.loadGoals(this);String[] cats={"⚡ Kısa Vadeli • 0–3 ay","🌿 Orta Vadeli • 3–12 ay","🏔️ Uzun Vadeli • 12+ ay"};for(int c=0;c<3;c++){p.addView(head(cats[c]));boolean any=false;for(GoalItem g:all)if(goalCat(g)==c){p.addView(goalCard(g,c));space(p,7);any=true;}if(!any){TextView x=text("Henüz hedef yok.");x.setTextColor(MUTED);p.addView(x);}space(p,12);}Button add=primary("+ Hedef Ekle");add.setOnClickListener(v->goalTitle());p.addView(add);show(p);navState();}
+    private int goalCat(GoalItem g){LocalDate today=LocalDate.now(),target=TimeUtils.toDate(g.targetDate);if(!target.isAfter(today.plusMonths(3)))return 0;if(target.isBefore(today.plusMonths(12)))return 1;return 2;}
+    private View goalCard(GoalItem g,int cat){int color=cat==0?MINT:cat==1?SKY:LILAC;String em=cat==0?"⚡":cat==1?"🌿":"🏔️";LinearLayout c=card(color);c.addView(head(em+" "+(g.completed?"✓ ":"")+g.title));TextView d=text("Hedef tarihi: "+TimeUtils.formatDate(g.targetDate));d.setTextColor(MUTED);c.addView(d);LinearLayout r=row();Button done=small(g.completed?"Geri al":"Tamamlandı"),del=small("Sil");done.setOnClickListener(v->{List<GoalItem>a=AppStore.loadGoals(this);GoalItem x=findGoal(a,g.id);if(x!=null){x.completed=!x.completed;x.completedAt=x.completed?System.currentTimeMillis():0;AppStore.saveGoals(this,a);}goals();});del.setOnClickListener(v->{List<GoalItem>a=AppStore.loadGoals(this);a.removeIf(x->x.id.equals(g.id));AppStore.saveGoals(this,a);goals();});r.addView(done,new LinearLayout.LayoutParams(0,dp(48),1));spaceH(r,8);r.addView(del,new LinearLayout.LayoutParams(0,dp(48),1));c.addView(r);return c;}
+    private void goalTitle(){GoalItem g=new GoalItem();EditText e=new EditText(this);e.setHint("Örn: İngilizce B2 seviyesine ulaş");AlertDialog a=new AlertDialog.Builder(this).setTitle("1/2 • Hedef").setView(e).setNegativeButton("İptal",null).setPositiveButton("Devam",null).create();a.setOnShowListener(x->a.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{String s=e.getText().toString().trim();if(s.isEmpty()){e.setError("Başlık gerekli");return;}g.title=s;a.dismiss();LocalDate n=LocalDate.now().plusMonths(1);DatePickerDialog p=new DatePickerDialog(this,(q,y,m,d)->{g.targetDate=TimeUtils.atStart(LocalDate.of(y,m+1,d));List<GoalItem>z=AppStore.loadGoals(this);z.add(g);AppStore.saveGoals(this,z);goals();},n.getYear(),n.getMonthValue()-1,n.getDayOfMonth());p.getDatePicker().setMinDate(TimeUtils.atStart(LocalDate.now()));p.show();}));a.show();}
 
-    private View taskCard(TaskItem t) {
-        LinearLayout c=card(); int n=TimeUtils.currentCount(t);
-        TextView a=text(t.title); a.setTextSize(18); a.setTypeface(null,Typeface.BOLD); c.addView(a);
-        c.addView(text(TimeUtils.periodLabel(t.period)+" • Hedef "+t.requiredCount+" tekrar"));
-        TextView pr=text(n+"/"+t.requiredCount); pr.setTypeface(null,Typeface.BOLD); c.addView(pr);
-        ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal); bar.setMax(t.requiredCount); bar.setProgress(Math.min(n,t.requiredCount)); c.addView(bar,new LinearLayout.LayoutParams(-1,dp(12)));
-        if(t.reminderEnabled)c.addView(text(String.format(Locale.getDefault(),"Hatırlatma: %02d:%02d",t.reminderHour,t.reminderMinute)));
-        space(c,8); LinearLayout rr=row();
-        Button plus=btn("+1"), undo=btn("Geri al"), del=btn("Sil"); plus.setEnabled(n<t.requiredCount); undo.setEnabled(n>0);
-        plus.setOnClickListener(v->{List<TaskItem> all=AppStore.loadTasks(this); TaskItem x=findTask(all,t.id); if(x!=null&&TimeUtils.currentCount(x)<x.requiredCount){x.completions.add(System.currentTimeMillis());AppStore.saveTasks(this,all);} tasks();});
-        undo.setOnClickListener(v->{List<TaskItem> all=AppStore.loadTasks(this); TaskItem x=findTask(all,t.id); if(x!=null){long[] q=TimeUtils.currentPeriod(x);for(int i=x.completions.size()-1;i>=0;i--){long z=x.completions.get(i);if(z>=q[0]&&z<=q[1]){x.completions.remove(i);break;}}AppStore.saveTasks(this,all);}tasks();});
-        del.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("Silinsin mi?").setMessage(t.title).setNegativeButton("Vazgeç",null).setPositiveButton("Sil",(d,w)->{List<TaskItem> all=AppStore.loadTasks(this);all.removeIf(x->x.id.equals(t.id));AppStore.saveTasks(this,all);ReminderScheduler.cancel(this,t.id);tasks();}).show());
-        rr.addView(plus,new LinearLayout.LayoutParams(0,dp(44),1));spaceH(rr,5);rr.addView(undo,new LinearLayout.LayoutParams(0,dp(44),1));spaceH(rr,5);rr.addView(del,new LinearLayout.LayoutParams(0,dp(44),1));c.addView(rr); return c;
-    }
-
-    private void taskTitle(){ TaskItem d=new TaskItem(); EditText e=new EditText(this);e.setHint("Başlık"); AlertDialog a=new AlertDialog.Builder(this).setTitle("1/4 • Başlık").setView(e).setNegativeButton("İptal",null).setPositiveButton("Devam",null).create(); a.setOnShowListener(x->a.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{String s=e.getText().toString().trim();if(s.isEmpty()){e.setError("Başlık gerekli");return;}d.title=s;a.dismiss();taskPeriod(d);}));a.show(); }
-    private void taskPeriod(TaskItem d){String[] x={"Günlük","Haftalık","Aylık"};new AlertDialog.Builder(this).setTitle("2/4 • Periyot").setItems(x,(a,i)->{d.period=i==1?TaskItem.WEEKLY:i==2?TaskItem.MONTHLY:TaskItem.DAILY;taskRepeat(d);}).setNegativeButton("İptal",null).show();}
-    private void taskRepeat(TaskItem d){NumberPicker n=new NumberPicker(this);n.setMinValue(1);n.setMaxValue(10);n.setValue(1);new AlertDialog.Builder(this).setTitle("3/4 • Tekrar").setMessage("Seçilen periyot içinde kaç kez yapılmalı?").setView(n).setNegativeButton("İptal",null).setPositiveButton("Devam",(a,w)->{d.requiredCount=n.getValue();taskReminder(d);}).show();}
-    private void taskReminder(TaskItem d){new AlertDialog.Builder(this).setTitle("4/4 • Hatırlatma").setMessage("Hatırlatma eklemek ister misiniz?").setNegativeButton("Hayır",(a,w)->saveTask(d)).setPositiveButton("Saat seç",(a,w)->new TimePickerDialog(this,(v,h,m)->{d.reminderEnabled=true;d.reminderHour=h;d.reminderMinute=m;saveTask(d);},9,0,true).show()).show();}
-    private void saveTask(TaskItem d){List<TaskItem> x=AppStore.loadTasks(this);x.add(d);AppStore.saveTasks(this,x);if(d.reminderEnabled)ReminderScheduler.schedule(this,d);tasks();}
-
-    private void goals(){screen="GOALS";LinearLayout p=page();p.addView(title("Hedefler"));space(p,8);List<GoalItem> all=AppStore.loadGoals(this);String[] cats={"Kısa Vadeli • 0–3 ay","Orta Vadeli • 3–12 ay","Uzun Vadeli • 12+ ay"};for(int c=0;c<3;c++){TextView h=text(cats[c]);h.setTextSize(18);h.setTypeface(null,Typeface.BOLD);p.addView(h);boolean any=false;for(GoalItem g:all)if(goalCat(g)==c){p.addView(goalCard(g));space(p,7);any=true;}if(!any)p.addView(text("Henüz hedef yok."));space(p,14);}Button add=primary("+ Hedef Ekle");add.setOnClickListener(v->goalTitle());p.addView(add);show(p);}
-    private int goalCat(GoalItem g){long m=ChronoUnit.MONTHS.between(LocalDate.now(),TimeUtils.toDate(g.targetDate));if(m<3)return 0;if(m<12)return 1;return 2;}
-    private View goalCard(GoalItem g){LinearLayout c=card();TextView t=text((g.completed?"✓ ":"")+g.title);t.setTypeface(null,Typeface.BOLD);c.addView(t);c.addView(text("Hedef tarihi: "+TimeUtils.formatDate(g.targetDate)));LinearLayout r=row();Button done=btn(g.completed?"Geri al":"Tamamlandı"),del=btn("Sil");done.setOnClickListener(v->{List<GoalItem> a=AppStore.loadGoals(this);GoalItem x=findGoal(a,g.id);if(x!=null){x.completed=!x.completed;x.completedAt=x.completed?System.currentTimeMillis():0;AppStore.saveGoals(this,a);}goals();});del.setOnClickListener(v->{List<GoalItem>a=AppStore.loadGoals(this);a.removeIf(x->x.id.equals(g.id));AppStore.saveGoals(this,a);goals();});r.addView(done,new LinearLayout.LayoutParams(0,dp(44),1));spaceH(r,6);r.addView(del,new LinearLayout.LayoutParams(0,dp(44),1));c.addView(r);return c;}
-    private void goalTitle(){GoalItem g=new GoalItem();EditText e=new EditText(this);e.setHint("Hedef");AlertDialog a=new AlertDialog.Builder(this).setTitle("Hedef başlığı").setView(e).setNegativeButton("İptal",null).setPositiveButton("Tarih seç",null).create();a.setOnShowListener(x->a.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{String s=e.getText().toString().trim();if(s.isEmpty()){e.setError("Başlık gerekli");return;}g.title=s;a.dismiss();LocalDate n=LocalDate.now();new DatePickerDialog(this,(q,y,m,d)->{LocalDate ld=LocalDate.of(y,m+1,d);g.targetDate=TimeUtils.atStart(ld);List<GoalItem>z=AppStore.loadGoals(this);z.add(g);AppStore.saveGoals(this,z);goals();},n.getYear(),n.getMonthValue()-1,n.getDayOfMonth()).show();}));a.show();}
-
-    private void report(){screen="REPORT";LinearLayout p=page();p.addView(title("Haftalık Rapor"));LocalDate mon=TimeUtils.mondayForOffset(weekOffset),sun=mon.plusDays(6);p.addView(text(TimeUtils.formatShort(mon)+" – "+TimeUtils.formatShort(sun)));LinearLayout r=row();Button prev=btn("← Önceki"),next=btn(weekOffset<0?"Sonraki →":"Bu Hafta");next.setEnabled(weekOffset<0);prev.setOnClickListener(v->{weekOffset--;report();});next.setOnClickListener(v->{if(weekOffset<0)weekOffset++;report();});r.addView(prev,new LinearLayout.LayoutParams(0,dp(44),1));spaceH(r,8);r.addView(next,new LinearLayout.LayoutParams(0,dp(44),1));p.addView(r);space(p,12);
-        List<TaskItem> ts=AppStore.loadTasks(this);List<GoalItem> gs=AppStore.loadGoals(this);long ws=TimeUtils.atStart(mon),we=TimeUtils.atEnd(sun);int entered=0,gentered=0,gdone=0;for(TaskItem t:ts)if(t.createdAt>=ws&&t.createdAt<=we)entered++;for(GoalItem g:gs){if(g.createdAt>=ws&&g.createdAt<=we)gentered++;if(g.completedAt>=ws&&g.completedAt<=we)gdone++;}int ok=0,fail=0,ongoing=0;LocalDate today=LocalDate.now();for(TaskItem t:ts){if(TimeUtils.toDate(t.createdAt).isAfter(sun))continue;if(TaskItem.DAILY.equals(t.period)){for(LocalDate d=mon;!d.isAfter(sun);d=d.plusDays(1)){if(d.isBefore(TimeUtils.toDate(t.createdAt)))continue;if(weekOffset==0&&!d.isBefore(today)){if(d.equals(today))ongoing++;continue;}int c=TimeUtils.count(t.completions,TimeUtils.atStart(d),TimeUtils.atEnd(d));if(c>=t.requiredCount)ok++;else fail++;}}else if(TaskItem.WEEKLY.equals(t.period)){if(weekOffset==0)ongoing++;else{int c=TimeUtils.count(t.completions,ws,we);if(c>=t.requiredCount)ok++;else fail++;}}else ongoing++;}
-        int den=ok+fail,rate=den==0?0:(int)Math.round(ok*100.0/den);p.addView(cardText("Yapılacaklar\nBu hafta girilen: "+entered+"\nYeterli tekrara ulaşan periyot: "+ok+"\nYetersiz kalan periyot: "+fail+"\nDevam eden periyot: "+ongoing+"\nBaşarı oranı: %"+rate));space(p,10);int active=0;for(GoalItem g:gs)if(!g.completed)active++;p.addView(cardText("Hedefler\nBu hafta girilen: "+gentered+"\nBu hafta tamamlanan: "+gdone+"\nToplam aktif hedef: "+active));show(p);}
+    private void report(){screen="REPORT";LinearLayout p=page();p.addView(title("Haftalık Rapor 📈"));TextView hi=text("Bu hafta neler yaptığını küçük bir özetle görelim ✨");hi.setTextColor(MUTED);p.addView(hi);LocalDate mon=TimeUtils.mondayForOffset(weekOffset),sun=mon.plusDays(6);TextView range=text(TimeUtils.formatShort(mon)+" – "+TimeUtils.formatShort(sun));range.setTextColor(MUTED);p.addView(range);space(p,10);LinearLayout r=row();Button prev=small("← Önceki"),next=small(weekOffset<0?"Sonraki →":"Bu Hafta");next.setEnabled(weekOffset<0);prev.setOnClickListener(v->{weekOffset--;report();});next.setOnClickListener(v->{if(weekOffset<0)weekOffset++;report();});r.addView(prev,new LinearLayout.LayoutParams(0,dp(48),1));spaceH(r,8);r.addView(next,new LinearLayout.LayoutParams(0,dp(48),1));p.addView(r);space(p,12);List<TaskItem> ts=AppStore.loadTasks(this);List<GoalItem> gs=AppStore.loadGoals(this);long ws=TimeUtils.atStart(mon),we=TimeUtils.atEnd(sun);int entered=0,gentered=0,gdone=0;for(TaskItem t:ts)if(t.createdAt>=ws&&t.createdAt<=we)entered++;for(GoalItem g:gs){if(g.createdAt>=ws&&g.createdAt<=we)gentered++;if(g.completedAt>=ws&&g.completedAt<=we)gdone++;}int ok=0,fail=0,ongoing=0;LocalDate today=LocalDate.now();for(TaskItem t:ts){if(TimeUtils.toDate(t.createdAt).isAfter(sun))continue;if(TaskItem.DAILY.equals(t.period)){for(LocalDate d=mon;!d.isAfter(sun);d=d.plusDays(1)){if(d.isBefore(TimeUtils.toDate(t.createdAt)))continue;if(weekOffset==0&&!d.isBefore(today)){if(d.equals(today))ongoing++;continue;}int c=TimeUtils.count(t.completions,TimeUtils.atStart(d),TimeUtils.atEnd(d));if(c>=t.requiredCount)ok++;else fail++;}}else if(TaskItem.WEEKLY.equals(t.period)){if(weekOffset==0)ongoing++;else{int c=TimeUtils.count(t.completions,ws,we);if(c>=t.requiredCount)ok++;else fail++;}}else ongoing++;}int den=ok+fail,rate=den==0?0:(int)Math.round(ok*100.0/den);LinearLayout score=card(YELLOW);score.addView(head("Bu haftanın puanı 🌟"));score.addView(text("Başarı oranı: %"+rate));score.addView(text("Tamamlanan görev periyodu: "+ok));p.addView(score);space(p,10);LinearLayout tc=card(PEACH);tc.addView(head("Yapılacaklar ✨"));tc.addView(text("Bu hafta girilen: "+entered));tc.addView(text("Yeterli tekrara ulaşan periyot: "+ok));tc.addView(text("Yetersiz kalan periyot: "+fail));tc.addView(text("Devam eden periyot: "+ongoing));p.addView(tc);space(p,10);int active=0;for(GoalItem g:gs)if(!g.completed)active++;LinearLayout gc=card(SKY);gc.addView(head("Hedefler 🌱"));gc.addView(text("Bu hafta girilen: "+gentered));gc.addView(text("Bu hafta tamamlanan: "+gdone));gc.addView(text("Toplam aktif hedef: "+active));p.addView(gc);show(p);navState();}
 
     private TaskItem findTask(List<TaskItem>a,String id){for(TaskItem x:a)if(x.id.equals(id))return x;return null;} private GoalItem findGoal(List<GoalItem>a,String id){for(GoalItem x:a)if(x.id.equals(id))return x;return null;}
-    private LinearLayout page(){LinearLayout x=new LinearLayout(this);x.setOrientation(LinearLayout.VERTICAL);x.setPadding(dp(4),dp(10),dp(4),dp(22));return x;} private LinearLayout row(){LinearLayout x=new LinearLayout(this);x.setOrientation(LinearLayout.HORIZONTAL);return x;}
-    private LinearLayout card(){LinearLayout x=new LinearLayout(this);x.setOrientation(LinearLayout.VERTICAL);x.setPadding(dp(15),dp(13),dp(15),dp(13));x.setBackgroundColor(Color.WHITE);return x;} private View cardText(String s){LinearLayout c=card();c.addView(text(s));return c;}
-    private TextView title(String s){TextView x=text(s);x.setTextSize(28);x.setTypeface(null,Typeface.BOLD);return x;} private TextView text(String s){TextView x=new TextView(this);x.setText(s);x.setTextSize(15);x.setTextColor(Color.rgb(30,30,30));x.setPadding(0,dp(3),0,dp(3));return x;}
-    private Button btn(String s){Button b=new Button(this);b.setAllCaps(false);b.setText(s);return b;} private Button primary(String s){Button b=btn(s);b.setTextSize(17);b.setGravity(Gravity.CENTER);b.setMinHeight(dp(72));return b;}
-    private void show(LinearLayout p){ScrollView s=new ScrollView(this);s.addView(p,new ScrollView.LayoutParams(-1,-2));host.removeAllViews();host.addView(s,new FrameLayout.LayoutParams(-1,-1));}
-    private void space(LinearLayout x,int n){View v=new View(this);x.addView(v,new LinearLayout.LayoutParams(1,dp(n)));} private void spaceH(LinearLayout x,int n){View v=new View(this);x.addView(v,new LinearLayout.LayoutParams(dp(n),1));} private int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+.5f);} private void toast(String s){Toast.makeText(this,s,Toast.LENGTH_SHORT).show();}
+    private LinearLayout col(){LinearLayout x=new LinearLayout(this);x.setOrientation(LinearLayout.VERTICAL);return x;} private LinearLayout row(){LinearLayout x=new LinearLayout(this);x.setOrientation(LinearLayout.HORIZONTAL);return x;} private LinearLayout page(){LinearLayout x=col();x.setPadding(dp(4),dp(10),dp(4),dp(18));return x;}
+    private LinearLayout card(int color){LinearLayout x=col();x.setPadding(dp(16),dp(14),dp(16),dp(14));x.setBackground(bg(color,darker(color),18));x.setElevation(dp(2));return x;} private GradientDrawable bg(int c,int stroke,int radius){GradientDrawable g=new GradientDrawable();g.setColor(c);g.setCornerRadius(dp(radius));g.setStroke(dp(1),stroke);return g;} private int darker(int c){return Color.rgb((int)(Color.red(c)*.88),(int)(Color.green(c)*.88),(int)(Color.blue(c)*.88));}
+    private TextView title(String s){TextView x=text(s);x.setTextSize(30);x.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return x;} private TextView head(String s){TextView x=text(s);x.setTextSize(18);x.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return x;} private TextView text(String s){TextView x=new TextView(this);x.setText(s);x.setTextSize(15);x.setTextColor(TEXT);x.setPadding(0,dp(3),0,dp(3));return x;}
+    private Button primary(String s){Button b=new Button(this);b.setAllCaps(false);b.setText(s);b.setTextSize(16);b.setTypeface(Typeface.DEFAULT,Typeface.BOLD);b.setTextColor(Color.WHITE);b.setBackground(bg(CORAL,darker(CORAL),16));b.setMinHeight(dp(54));return b;} private Button small(String s){Button b=new Button(this);b.setAllCaps(false);b.setText(s);b.setTextSize(13);b.setTextColor(TEXT);b.setBackground(bg(Color.WHITE,BORDER,14));return b;} private Button navBtn(String s){Button b=small(s);b.setTextSize(15);b.setTypeface(Typeface.DEFAULT,Typeface.BOLD);b.setMinHeight(dp(58));return b;} private void styleNav(Button b,boolean on){b.setTextColor(on?Color.WHITE:TEXT);b.setBackground(bg(on?PURPLE:Color.rgb(249,246,255),on?PURPLE:BORDER,18));}
+    private void show(LinearLayout p){ScrollView s=new ScrollView(this);s.setFillViewport(true);s.addView(p,new ScrollView.LayoutParams(-1,-2));host.removeAllViews();host.addView(s,new FrameLayout.LayoutParams(-1,-1));} private void space(LinearLayout x,int n){View v=new View(this);x.addView(v,new LinearLayout.LayoutParams(1,dp(n)));} private void spaceH(LinearLayout x,int n){View v=new View(this);x.addView(v,new LinearLayout.LayoutParams(dp(n),1));} private int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+.5f);}
 }
