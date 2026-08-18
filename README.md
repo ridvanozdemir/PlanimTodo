@@ -21,3 +21,5 @@ Android için çevrimdışı çalışan yapılacaklar ve hedefler uygulaması.
 
 ## APK oluşturma
 GitHub Actions içindeki **Build APK** iş akışı `main` güncellemelerinde ve PR kontrollerinde debug APK üretir. Çıktı `PlanimTodo-debug-apk` adlı artifact olarak bulunur.
+
+Build doğrulaması: v0.1.1
