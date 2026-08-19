@@ -1,4 +1,4 @@
-# Planım To Do v0.1.1
+# Planım To Do v0.1.2
 
 Android için çevrimdışı çalışan yapılacaklar ve hedefler uygulaması.
 
@@ -10,6 +10,11 @@ Android için çevrimdışı çalışan yapılacaklar ve hedefler uygulaması.
 - Başlıklara/periyotlara göre farklı arka plan tonları eklendi
 - Genel görünüm daha eğlenceli ve yumuşak hale getirildi
 
+## v0.1.2 dağıtım güncellemesi
+- Resmi paket adı: `com.ridvanozdemir.planimtodo`
+- Android Developer Console Limited Distribution kaydıyla uyumlu
+- Dağıtım APK'sı kalıcı release signing key ile imzalanır
+
 ## Özellikler
 - Yapılacaklar: günlük / haftalık / aylık periyot
 - Periyot içinde 1–10 tekrar hedefi ve ilerleme sayacı
@@ -20,6 +25,4 @@ Android için çevrimdışı çalışan yapılacaklar ve hedefler uygulaması.
 - Verileri cihazda saklama
 
 ## APK oluşturma
-GitHub Actions içindeki **Build APK** iş akışı `main` güncellemelerinde ve PR kontrollerinde debug APK üretir. Çıktı `PlanimTodo-debug-apk` adlı artifact olarak bulunur.
-
-Build doğrulaması: v0.1.1
+GitHub Actions içindeki **Build APK** iş akışı `main` güncellemelerinde ve PR kontrollerinde test APK üretir. Dağıtım için APK ayrıca kalıcı release anahtarıyla imzalanır.
