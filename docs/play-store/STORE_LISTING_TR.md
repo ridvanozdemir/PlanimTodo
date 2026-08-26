@@ -1,6 +1,6 @@
 # Planım — Google Play mağaza girişi taslağı
 
-Son güncelleme: 25 Ağustos 2026
+Son güncelleme: 26 Ağustos 2026
 
 ## Temel bilgiler
 
@@ -8,7 +8,7 @@ Son güncelleme: 25 Ağustos 2026
 - Önerilen kategori: **Verimlilik**
 - Fiyatlandırma: **Ücretsiz**
 - Reklam: **Yok**
-- Paket adı: `com.ridvanozdemir.planimtodo`
+- Paket adı: `com.ridvanozdemir.planim`
 - Önerilen hedef kitle: **13 yaş ve üzeri**; çocuklara özel tasarlanmamıştır
 
 ## Kısa açıklama
