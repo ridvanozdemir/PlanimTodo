@@ -1,26 +1,26 @@
 # Planım — Google Play Release Checklist
 
-Son güncelleme: 25 Ağustos 2026
+Son güncelleme: 26 Ağustos 2026
 
 ## Play Console
 
-- [ ] Geliştirici hesabı kimlik doğrulaması tamamlandı
+- [x] Geliştirici hesabı kimlik doğrulaması tamamlandı
 - [ ] İletişim telefonu doğrulandı
 - [ ] Planım Play Console'da oluşturuldu
-- [ ] Uygulama dili Türkçe olarak ayarlandı
-- [ ] Ücretsiz uygulama olarak ayarlandı
+- [x] Uygulama dili Türkçe olarak seçildi
+- [x] Ücretsiz uygulama olarak seçildi
 
 ## Teknik yayın paketi
 
-- [x] Paket adı: `com.ridvanozdemir.planimtodo`
+- [x] Paket adı: `com.ridvanozdemir.planim`
 - [x] `targetSdk = 36`
 - [x] `compileSdk = 36`
+- [x] Play v1.0 sürümü: `versionCode = 4`, `versionName = 1.0.0`
 - [x] Kalıcı release signing yaklaşımı mevcut
 - [ ] Release keystore güvenli biçimde yedeklendi
 - [ ] Keystore ve parolalar GitHub Secrets'a eklendi; repoya commit edilmedi
 - [ ] GitHub Actions `bundleRelease` ile imzalı `.aab` üretiyor
 - [ ] Play App Signing etkinleştirildi
-- [ ] İlk Play sürümü için versionCode/versionName kesinleştirildi
 
 ## Uygulama işlevleri
 
@@ -71,6 +71,10 @@ Son güncelleme: 25 Ağustos 2026
 - [ ] Yeni kişisel geliştirici hesabı gereksinimi geçerliyse en az 12 tester 14 gün kesintisiz opted-in kaldı
 - [ ] Production access başvurusu tamamlandı
 - [ ] Production release review'a gönderildi
+
+## Paket geçiş notu
+
+Önceki Limited Distribution/test paketi `com.ridvanozdemir.planimtodo` idi. Google Play v1.0 yeni paket adı `com.ridvanozdemir.planim` ile yayınlanacak. Bu nedenle eski test APK kurulumları Play Store sürümüne otomatik güncellenmez.
 
 ## Mevcut en önemli teknik fark
 
