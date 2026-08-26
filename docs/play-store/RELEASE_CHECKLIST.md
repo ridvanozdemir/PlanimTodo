@@ -6,7 +6,7 @@ Son güncelleme: 26 Ağustos 2026
 
 - [x] Geliştirici hesabı kimlik doğrulaması tamamlandı
 - [ ] İletişim telefonu doğrulandı
-- [ ] Planım Play Console'da oluşturuldu
+- [x] Planım Play Console'da oluşturuldu
 - [x] Uygulama dili Türkçe olarak seçildi
 - [x] Ücretsiz uygulama olarak seçildi
 
