@@ -1,14 +1,20 @@
-# Planım v1.1.0
+# Planım v1.1.1
 
 Android için çevrimdışı çalışan görev, hedef ve haftalık ilerleme takip uygulaması.
 
 ## Güncel Play Store sürümü
 - Resmi Play Store paket adı: `com.ridvanozdemir.planim`
-- `versionCode = 5`
-- `versionName = 1.1.0`
+- `versionCode = 6`
+- `versionName = 1.1.1`
 - Android 16 / API 36 hedeflenir
 - Dağıtım sürümleri kalıcı release signing key ile imzalanır
 - Google Play dağıtımı şu anda **Kapalı test (Alpha)** kanalı üzerinden yürütülmektedir
+
+## v1.1.1 Android 15/16 uyumluluk güncellemesi
+- Android 15 ve 16 için uçtan uca (edge-to-edge) ekran desteği eklendi
+- Status bar, navigation bar ve ekran çentiği boşlukları WindowInsets ile güvenli şekilde yönetilir
+- Desteği sonlandırılmış sistem çubuğu renk API çağrıları kaldırıldı
+- Mevcut görev, hedef ve hatırlatma verileri korunur
 
 ## v1.1.0 arayüz güncellemesi
 - Görevler / Hedefler / Rapor için 3 sekmeli alt navigasyon
