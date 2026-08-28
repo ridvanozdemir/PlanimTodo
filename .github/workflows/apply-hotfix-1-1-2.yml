@@ -1,0 +1,127 @@
+name: Apply Planim 1.1.2 Startup Hotfix
+
+on:
+  push:
+    branches: [ "hotfix-1.1.2-startup-crash" ]
+
+jobs:
+  hotfix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hotfix-1.1.2-startup-crash
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
+      - name: Apply startup stability hotfix
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          main = Path('app/src/main/java/com/ridvan/planim/MainActivity.java')
+          text = main.read_text()
+          text = text.replace('import android.graphics.Insets;\n', '')
+          text = text.replace('import android.view.WindowInsets;\n', '')
+
+          old_oncreate = '''        if (Build.VERSION.SDK_INT >= 30) {
+              getWindow().setDecorFitsSystemWindows(false);
+              WindowInsetsController controller = getWindow().getInsetsController();
+              if (controller != null) {
+                  int lightBars = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS |
+                          WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                  controller.setSystemBarsAppearance(lightBars, lightBars);
+              }
+          }
+'''
+          new_oncreate = '''        if (Build.VERSION.SDK_INT >= 30) {
+              // Stability-first hotfix: let Android fit content around system bars.
+              // We keep the modern icon appearance API, but avoid the edge-to-edge
+              // listener path that caused startup crashes on some Samsung devices.
+              getWindow().setDecorFitsSystemWindows(true);
+              WindowInsetsController controller = getWindow().getInsetsController();
+              if (controller != null) {
+                  int lightBars = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS |
+                          WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                  controller.setSystemBarsAppearance(lightBars, lightBars);
+              }
+          }
+'''
+          if old_oncreate not in text:
+              raise SystemExit('Expected onCreate edge-to-edge block not found')
+          text = text.replace(old_oncreate, new_oncreate)
+
+          old_shell = '''        if (Build.VERSION.SDK_INT >= 30) {
+              root.setOnApplyWindowInsetsListener((view, insets) -> {
+                  Insets safe = insets.getInsets(
+                          WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout()
+                  );
+                  view.setPadding(safe.left, safe.top, safe.right, safe.bottom);
+                  return insets;
+              });
+              root.requestApplyInsets();
+          } else {
+              root.setFitsSystemWindows(true);
+          }
+'''
+          new_shell = '''        root.setFitsSystemWindows(true);
+'''
+          if old_shell not in text:
+              raise SystemExit('Expected WindowInsets shell block not found')
+          text = text.replace(old_shell, new_shell)
+          main.write_text(text)
+
+          theme = Path('app/src/main/res/values/themes.xml')
+          t = theme.read_text()
+          t = t.replace('<item name="android:statusBarColor">#00000000</item>', '<item name="android:statusBarColor">#FAF8F4</item>')
+          t = t.replace('<item name="android:navigationBarColor">#00000000</item>', '<item name="android:navigationBarColor">#FAF8F4</item>')
+          theme.write_text(t)
+
+          gradle = Path('app/build.gradle.kts')
+          g = gradle.read_text()
+          g = g.replace('versionCode = 6', 'versionCode = 7')
+          g = g.replace('versionName = "1.1.1"', 'versionName = "1.1.2"')
+          gradle.write_text(g)
+
+          readme = Path('README.md')
+          r = readme.read_text()
+          r = r.replace('# Planım v1.1.1', '# Planım v1.1.2', 1)
+          r = r.replace('versionCode = 6', 'versionCode = 7', 1)
+          r = r.replace('versionName = 1.1.1', 'versionName = 1.1.2', 1)
+          marker = '## v1.1.1 Android 15/16 uyumluluk güncellemesi'
+          hotfix = '''## v1.1.2 başlangıç kararlılığı düzeltmesi
+- Bazı Samsung/Android sürümlerinde açılışta oluşan kapanma sorunu için sistem çubuğu yerleşimi güvenli moda alındı
+- Görev, hedef ve hatırlatma verileri korunur
+- Paket adı ve Play kapalı test kanalı değişmez
+
+'''
+          if hotfix not in r:
+              r = r.replace(marker, hotfix + marker)
+          readme.write_text(r)
+          PY
+
+      - run: yes | sdkmanager --licenses >/dev/null || true
+      - run: sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+      - name: Verify debug build
+        run: gradle assembleDebug
+
+      - name: Commit hotfix and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name "ridvanozdemir"
+          git config user.email "66924366+ridvanozdemir@users.noreply.github.com"
+          git rm .github/workflows/apply-hotfix-1-1-2.yml
+          git add app/build.gradle.kts app/src/main/java/com/ridvan/planim/MainActivity.java app/src/main/res/values/themes.xml README.md
+          git commit -m "Hotfix 1.1.2 startup crash on affected Android devices"
+          git push origin hotfix-1.1.2-startup-crash
