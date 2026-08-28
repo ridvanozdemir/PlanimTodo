@@ -1,14 +1,20 @@
-# Planım v1.1.3
+# Planım v1.1.4
 
 Android için çevrimdışı çalışan görev, hedef ve haftalık ilerleme takip uygulaması.
 
 ## Güncel Play Store sürümü
 - Resmi Play Store paket adı: `com.ridvanozdemir.planim`
-- `versionCode = 8`
-- `versionName = 1.1.3`
+- `versionCode = 9`
+- `versionName = 1.1.4`
 - Android 16 / API 36 hedeflenir
 - Dağıtım sürümleri kalıcı release signing key ile imzalanır
 - Google Play dağıtımı şu anda **Kapalı test (Alpha)** kanalı üzerinden yürütülmektedir
+
+## v1.1.4 launcher ikon güncellemesi
+- Planım için özel launcher ikonu eklendi
+- Android manifesti `@mipmap/ic_launcher` ikonunu kullanacak şekilde güncellendi
+- Paket adı değiştirilmedi; mevcut Play kurulumu normal güncelleme alır
+- Uygulama işlevleri ve yerel veri yapısı değiştirilmedi
 
 ## v1.1.3 kararlı geri dönüş sürümü
 - Son sorunsuz çalışan `1.1.0` uygulama kodu temel alınmıştır
