@@ -47,8 +47,6 @@ jobs:
 '''
           new_oncreate = '''        if (Build.VERSION.SDK_INT >= 30) {
               // Stability-first hotfix: let Android fit content around system bars.
-              // We keep the modern icon appearance API, but avoid the edge-to-edge
-              // listener path that caused startup crashes on some Samsung devices.
               getWindow().setDecorFitsSystemWindows(true);
               WindowInsetsController controller = getWindow().getInsetsController();
               if (controller != null) {
@@ -100,12 +98,7 @@ jobs:
           r = r.replace('versionCode = 6', 'versionCode = 7', 1)
           r = r.replace('versionName = 1.1.1', 'versionName = 1.1.2', 1)
           marker = '## v1.1.1 Android 15/16 uyumluluk güncellemesi'
-          hotfix = '''## v1.1.2 başlangıç kararlılığı düzeltmesi
-- Bazı Samsung/Android sürümlerinde açılışta oluşan kapanma sorunu için sistem çubuğu yerleşimi güvenli moda alındı
-- Görev, hedef ve hatırlatma verileri korunur
-- Paket adı ve Play kapalı test kanalı değişmez
-
-'''
+          hotfix = "## v1.1.2 başlangıç kararlılığı düzeltmesi\n- Bazı Samsung/Android sürümlerinde açılışta oluşan kapanma sorunu için sistem çubuğu yerleşimi güvenli moda alındı\n- Görev, hedef ve hatırlatma verileri korunur\n- Paket adı ve Play kapalı test kanalı değişmez\n\n"
           if hotfix not in r:
               r = r.replace(marker, hotfix + marker)
           readme.write_text(r)
