@@ -45,5 +45,5 @@ jobs:
       - name: Upload Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: Planim-1.0.0-play-aab
+          name: Planim-play-aab
           path: app/build/outputs/bundle/release/app-release.aab
