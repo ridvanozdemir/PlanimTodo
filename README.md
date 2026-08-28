@@ -1,14 +1,21 @@
-# Planım v1.1.4
+# Planım v1.1.5
 
 Android için çevrimdışı çalışan görev, hedef ve haftalık ilerleme takip uygulaması.
 
 ## Güncel Play Store sürümü
 - Resmi Play Store paket adı: `com.ridvanozdemir.planim`
-- `versionCode = 9`
-- `versionName = 1.1.4`
+- `versionCode = 10`
+- `versionName = 1.1.5`
 - Android 16 / API 36 hedeflenir
 - Dağıtım sürümleri kalıcı release signing key ile imzalanır
 - Google Play dağıtımı şu anda **Kapalı test (Alpha)** kanalı üzerinden yürütülmektedir
+
+## v1.1.5 adaptive launcher ikon düzeltmesi
+- Telefon menüsündeki launcher ikonunun varsayılan Android ikonu olarak görünmesi sorunu giderildi
+- Android 8+ adaptive icon yapısı (`mipmap-anydpi-v26`) eklendi
+- Mevcut Planım checklist + hedef bayrağı görseli güvenli alana alınarak kenarlardan kırpılma azaltıldı
+- Bayrak ve hedef öğeleri farklı launcher maskelerinde tamamen görünür kalacak şekilde içeri taşındı
+- Çalışan uygulama kodu, görev/hedef verileri ve hatırlatma sistemi değiştirilmedi
 
 ## v1.1.4 launcher ikon güncellemesi
 - Planım için özel launcher ikonu eklendi

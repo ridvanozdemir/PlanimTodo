@@ -15,8 +15,8 @@ android {
         applicationId = "com.ridvanozdemir.planim"
         minSdk = 26
         targetSdk = 36
-        versionCode = 9
-        versionName = "1.1.4"
+        versionCode = 10
+        versionName = "1.1.5"
     }
 
     signingConfigs {
