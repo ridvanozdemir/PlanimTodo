@@ -13,14 +13,11 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
-import android.graphics.Insets;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowInsets;
-import android.view.WindowInsetsController;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -71,13 +68,15 @@ public class MainActivity extends Activity {
         super.onCreate(state);
 
         if (Build.VERSION.SDK_INT >= 30) {
-            getWindow().setDecorFitsSystemWindows(false);
-            WindowInsetsController controller = getWindow().getInsetsController();
-            if (controller != null) {
-                int lightBars = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS |
-                        WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
-                controller.setSystemBarsAppearance(lightBars, lightBars);
-            }
+            getWindow().setDecorFitsSystemWindows(true);
+        }
+        getWindow().setStatusBarColor(BG);
+        getWindow().setNavigationBarColor(BG);
+        if (Build.VERSION.SDK_INT >= 23) {
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR |
+                            (Build.VERSION.SDK_INT >= 26 ? View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR : 0)
+            );
         }
 
         if (Build.VERSION.SDK_INT >= 33 &&
@@ -106,18 +105,7 @@ public class MainActivity extends Activity {
     private void shell() {
         LinearLayout root = col();
         root.setBackgroundColor(BG);
-        if (Build.VERSION.SDK_INT >= 30) {
-            root.setOnApplyWindowInsetsListener((view, insets) -> {
-                Insets safe = insets.getInsets(
-                        WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout()
-                );
-                view.setPadding(safe.left, safe.top, safe.right, safe.bottom);
-                return insets;
-            });
-            root.requestApplyInsets();
-        } else {
-            root.setFitsSystemWindows(true);
-        }
+        root.setFitsSystemWindows(true);
 
         host = new FrameLayout(this);
         host.setClipChildren(false);

@@ -26,20 +26,16 @@ public final class TimeUtils {
     }
 
     public static LocalDate toDate(long millis) {
-        try {
-            return Instant.ofEpochMilli(millis).atZone(ZONE).toLocalDate();
-        } catch (RuntimeException error) {
-            return LocalDate.now(ZONE);
-        }
+        return Instant.ofEpochMilli(millis).atZone(ZONE).toLocalDate();
     }
 
     public static long[] currentPeriod(TaskItem task) {
         LocalDate today = LocalDate.now(ZONE);
-        if (task != null && TaskItem.WEEKLY.equals(task.period)) {
+        if (TaskItem.WEEKLY.equals(task.period)) {
             LocalDate start = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
             return new long[]{atStart(start), atEnd(start.plusDays(6))};
         }
-        if (task != null && TaskItem.MONTHLY.equals(task.period)) {
+        if (TaskItem.MONTHLY.equals(task.period)) {
             LocalDate start = today.withDayOfMonth(1);
             return new long[]{atStart(start), atEnd(start.plusMonths(1).minusDays(1))};
         }
@@ -47,16 +43,12 @@ public final class TimeUtils {
     }
 
     public static int count(List<Long> values, long start, long end) {
-        if (values == null || values.isEmpty()) return 0;
-        int count = 0;
-        for (Long timestamp : values) {
-            if (timestamp != null && timestamp >= start && timestamp <= end) count++;
-        }
-        return count;
+        int c = 0;
+        for (Long ts : values) if (ts >= start && ts <= end) c++;
+        return c;
     }
 
     public static int currentCount(TaskItem task) {
-        if (task == null) return 0;
         long[] range = currentPeriod(task);
         return count(task.completions, range[0], range[1]);
     }
@@ -68,7 +60,8 @@ public final class TimeUtils {
     }
 
     public static String formatDate(long millis) {
-        return toDate(millis).format(DateTimeFormatter.ofPattern("dd MMMM yyyy", TR));
+        return Instant.ofEpochMilli(millis).atZone(ZONE).toLocalDate()
+                .format(DateTimeFormatter.ofPattern("dd MMMM yyyy", TR));
     }
 
     public static String formatShort(LocalDate date) {
@@ -76,10 +69,7 @@ public final class TimeUtils {
     }
 
     public static long localDateAtTime(LocalDate date, int hour, int minute) {
-        int safeHour = Math.max(0, Math.min(23, hour));
-        int safeMinute = Math.max(0, Math.min(59, minute));
-        return LocalDateTime.of(date, LocalTime.of(safeHour, safeMinute))
-                .atZone(ZONE).toInstant().toEpochMilli();
+        return LocalDateTime.of(date, LocalTime.of(hour, minute)).atZone(ZONE).toInstant().toEpochMilli();
     }
 
     public static LocalDate mondayForOffset(int offset) {
