@@ -155,8 +155,6 @@ public class MainActivity extends Activity {
         LinearLayout page = page();
 
         addBrandHeader(page, "Görevlerini düzenle, küçük adımlarla ilerle.");
-        page.addView(segmentTabs(true));
-        space(page, 18);
 
         List<TaskItem> items = AppStore.loadTasks(this);
         LinearLayout titleRow = row();
@@ -282,7 +280,6 @@ public class MainActivity extends Activity {
         LinearLayout actions = row();
         Button complete = compactButton(count >= task.requiredCount ? "✓ Tamam" : "+1 Tamamla", soft, accent);
         Button undo = compactButton("Geri al", SURFACE, MUTED);
-        Button delete = compactButton("Sil", DANGER_SOFT, DANGER);
 
         complete.setEnabled(count < task.requiredCount);
         undo.setEnabled(count > 0);
@@ -314,6 +311,17 @@ public class MainActivity extends Activity {
             tasks();
         });
 
+        actions.addView(complete, new LinearLayout.LayoutParams(0, dp(42), 1.25f));
+        spaceH(actions, 7);
+        actions.addView(undo, new LinearLayout.LayoutParams(0, dp(42), 1f));
+        card.addView(actions);
+
+        space(card, 8);
+        LinearLayout manageActions = row();
+        Button editTask = compactButton("Düzenle", BLUE_SOFT, BLUE);
+        Button delete = compactButton("Sil", DANGER_SOFT, DANGER);
+
+        editTask.setOnClickListener(v -> taskForm(task));
         delete.setOnClickListener(v -> new AlertDialog.Builder(this)
                 .setTitle("Görev silinsin mi?")
                 .setMessage(task.title)
@@ -326,185 +334,210 @@ public class MainActivity extends Activity {
                     tasks();
                 }).show());
 
-        actions.addView(complete, new LinearLayout.LayoutParams(0, dp(42), 1.25f));
-        spaceH(actions, 7);
-        actions.addView(undo, new LinearLayout.LayoutParams(0, dp(42), 1f));
-        spaceH(actions, 7);
-        actions.addView(delete, new LinearLayout.LayoutParams(0, dp(42), .75f));
-        card.addView(actions);
+        manageActions.addView(editTask, new LinearLayout.LayoutParams(0, dp(42), 1f));
+        spaceH(manageActions, 7);
+        manageActions.addView(delete, new LinearLayout.LayoutParams(0, dp(42), .65f));
+        card.addView(manageActions);
 
         return card;
     }
 
     private void taskForm() {
-        screen = TASK_FORM;
-        LinearLayout page = page();
+    taskForm(null);
+}
 
-        page.addView(formHeader("Yeni görev", this::tasks));
-        space(page, 14);
+private void taskForm(TaskItem existing) {
+    screen = TASK_FORM;
+    LinearLayout page = page();
 
-        final TaskItem draft = new TaskItem();
-        final int[] periodIndex = {0};
-        final int[] repeat = {1};
-        final boolean[] reminderEnabled = {false};
-        final int[] reminderTime = {9, 0};
+    final boolean editing = existing != null;
+    page.addView(formHeader(editing ? "Görevi düzenle" : "Yeni görev", this::tasks));
+    space(page, 14);
 
-        LinearLayout form = surfaceCard();
+    final TaskItem draft = editing ? null : new TaskItem();
+    final int initialPeriod = !editing ? 0 :
+            TaskItem.WEEKLY.equals(existing.period) ? 1 :
+                    TaskItem.MONTHLY.equals(existing.period) ? 2 : 0;
+    final int[] periodIndex = {initialPeriod};
+    final int[] repeat = {editing ? Math.max(1, Math.min(10, existing.requiredCount)) : 1};
+    final boolean[] reminderEnabled = {editing && existing.reminderEnabled};
+    final int[] reminderTime = {
+            editing ? existing.reminderHour : 9,
+            editing ? existing.reminderMinute : 0
+    };
 
-        form.addView(label("Başlık"));
-        EditText title = edit("Örn: Su iç, kitap oku, yüzme...");
-        form.addView(title, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(54)
-        ));
+    LinearLayout form = surfaceCard();
 
-        space(form, 18);
-        form.addView(label("Periyot"));
+    form.addView(label("Başlık"));
+    EditText title = edit("Örn: Su iç, kitap oku, yüzme...");
+    if (editing) title.setText(existing.title);
+    form.addView(title, new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(54)
+    ));
 
-        LinearLayout periodRow = row();
-        Button daily = segmentButton("Günlük", true);
-        Button weekly = segmentButton("Haftalık", false);
-        Button monthly = segmentButton("Aylık", false);
-        Button[] periodButtons = {daily, weekly, monthly};
+    space(form, 18);
+    form.addView(label("Periyot"));
 
-        View.OnClickListener periodClick = v -> {
-            int index = v == daily ? 0 : v == weekly ? 1 : 2;
-            periodIndex[0] = index;
-            for (int i = 0; i < periodButtons.length; i++) {
-                styleSegmentButton(periodButtons[i], i == index);
-            }
-        };
-        daily.setOnClickListener(periodClick);
-        weekly.setOnClickListener(periodClick);
-        monthly.setOnClickListener(periodClick);
+    LinearLayout periodRow = row();
+    Button daily = segmentButton("Günlük", periodIndex[0] == 0);
+    Button weekly = segmentButton("Haftalık", periodIndex[0] == 1);
+    Button monthly = segmentButton("Aylık", periodIndex[0] == 2);
+    Button[] periodButtons = {daily, weekly, monthly};
 
-        periodRow.addView(daily, new LinearLayout.LayoutParams(0, dp(46), 1f));
-        spaceH(periodRow, 6);
-        periodRow.addView(weekly, new LinearLayout.LayoutParams(0, dp(46), 1f));
-        spaceH(periodRow, 6);
-        periodRow.addView(monthly, new LinearLayout.LayoutParams(0, dp(46), 1f));
-        form.addView(periodRow);
+    View.OnClickListener periodClick = v -> {
+        int index = v == daily ? 0 : v == weekly ? 1 : 2;
+        periodIndex[0] = index;
+        for (int i = 0; i < periodButtons.length; i++) {
+            styleSegmentButton(periodButtons[i], i == index);
+        }
+    };
+    daily.setOnClickListener(periodClick);
+    weekly.setOnClickListener(periodClick);
+    monthly.setOnClickListener(periodClick);
 
-        space(form, 18);
-        form.addView(label("Tekrar sayısı"));
+    periodRow.addView(daily, new LinearLayout.LayoutParams(0, dp(46), 1f));
+    spaceH(periodRow, 6);
+    periodRow.addView(weekly, new LinearLayout.LayoutParams(0, dp(46), 1f));
+    spaceH(periodRow, 6);
+    periodRow.addView(monthly, new LinearLayout.LayoutParams(0, dp(46), 1f));
+    form.addView(periodRow);
 
-        LinearLayout repeatRow = row();
-        repeatRow.setGravity(Gravity.CENTER_VERTICAL);
-        Button minus = compactButton("−", Color.rgb(247, 249, 250), TEXT);
-        Button plus = compactButton("+", Color.rgb(247, 249, 250), TEXT);
-        TextView repeatValue = valueText("1");
+    space(form, 18);
+    form.addView(label("Tekrar sayısı"));
 
-        minus.setOnClickListener(v -> {
-            if (repeat[0] > 1) repeat[0]--;
-            repeatValue.setText(String.valueOf(repeat[0]));
-        });
-        plus.setOnClickListener(v -> {
-            if (repeat[0] < 10) repeat[0]++;
-            repeatValue.setText(String.valueOf(repeat[0]));
-        });
+    LinearLayout repeatRow = row();
+    repeatRow.setGravity(Gravity.CENTER_VERTICAL);
+    Button minus = compactButton("−", Color.rgb(247, 249, 250), TEXT);
+    Button plus = compactButton("+", Color.rgb(247, 249, 250), TEXT);
+    TextView repeatValue = valueText(String.valueOf(repeat[0]));
 
-        repeatRow.addView(minus, new LinearLayout.LayoutParams(0, dp(48), 1f));
-        repeatRow.addView(repeatValue, new LinearLayout.LayoutParams(0, dp(48), 1f));
-        repeatRow.addView(plus, new LinearLayout.LayoutParams(0, dp(48), 1f));
-        form.addView(repeatRow);
+    minus.setOnClickListener(v -> {
+        if (repeat[0] > 1) repeat[0]--;
+        repeatValue.setText(String.valueOf(repeat[0]));
+    });
+    plus.setOnClickListener(v -> {
+        if (repeat[0] < 10) repeat[0]++;
+        repeatValue.setText(String.valueOf(repeat[0]));
+    });
 
-        TextView repeatHint = caption("Seçtiğin periyot içinde kaç kez tamamlamak istediğini belirle.");
-        form.addView(repeatHint);
+    repeatRow.addView(minus, new LinearLayout.LayoutParams(0, dp(48), 1f));
+    repeatRow.addView(repeatValue, new LinearLayout.LayoutParams(0, dp(48), 1f));
+    repeatRow.addView(plus, new LinearLayout.LayoutParams(0, dp(48), 1f));
+    form.addView(repeatRow);
 
-        space(form, 18);
-        LinearLayout reminderHeader = row();
-        reminderHeader.setGravity(Gravity.CENTER_VERTICAL);
-        LinearLayout reminderText = col();
-        reminderText.addView(label("Hatırlatıcı"));
-        TextView reminderSub = caption("İstersen tek bir hatırlatma saati seç.");
-        reminderText.addView(reminderSub);
-        reminderHeader.addView(reminderText,
-                new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+    TextView repeatHint = caption("Seçtiğin periyot içinde kaç kez tamamlamak istediğini belirle.");
+    form.addView(repeatHint);
 
-        Button toggle = compactButton("Kapalı", Color.rgb(247, 249, 250), MUTED);
-        reminderHeader.addView(toggle, new LinearLayout.LayoutParams(dp(90), dp(42)));
-        form.addView(reminderHeader);
+    space(form, 18);
+    LinearLayout reminderHeader = row();
+    reminderHeader.setGravity(Gravity.CENTER_VERTICAL);
+    LinearLayout reminderText = col();
+    reminderText.addView(label("Hatırlatıcı"));
+    TextView reminderSub = caption("İstersen tek bir hatırlatma saati seç.");
+    reminderText.addView(reminderSub);
+    reminderHeader.addView(reminderText,
+            new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
-        Button timeButton = compactButton("⏰ 09:00", BLUE_SOFT, BLUE);
-        LinearLayout.LayoutParams timeLp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(46)
-        );
-        timeLp.topMargin = dp(10);
-        form.addView(timeButton, timeLp);
-        timeButton.setEnabled(false);
-        timeButton.setAlpha(.45f);
+    Button toggle = compactButton("Kapalı", Color.rgb(247, 249, 250), MUTED);
+    reminderHeader.addView(toggle, new LinearLayout.LayoutParams(dp(90), dp(42)));
+    form.addView(reminderHeader);
 
-        Runnable refreshReminder = () -> {
-            boolean on = reminderEnabled[0];
-            toggle.setText(on ? "Açık" : "Kapalı");
-            toggle.setTextColor(on ? TEAL_DARK : MUTED);
-            toggle.setBackground(bg(on ? TEAL_SOFT : Color.rgb(247, 249, 250),
-                    on ? TEAL_SOFT : BORDER, 13));
-            timeButton.setEnabled(on);
-            timeButton.setAlpha(on ? 1f : .45f);
-            timeButton.setText(String.format(Locale.getDefault(), "⏰ %02d:%02d",
-                    reminderTime[0], reminderTime[1]));
-        };
+    Button timeButton = compactButton("⏰ 09:00", BLUE_SOFT, BLUE);
+    LinearLayout.LayoutParams timeLp = new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(46)
+    );
+    timeLp.topMargin = dp(10);
+    form.addView(timeButton, timeLp);
 
-        toggle.setOnClickListener(v -> {
-            reminderEnabled[0] = !reminderEnabled[0];
-            refreshReminder.run();
-        });
+    Runnable refreshReminder = () -> {
+        boolean on = reminderEnabled[0];
+        toggle.setText(on ? "Açık" : "Kapalı");
+        toggle.setTextColor(on ? TEAL_DARK : MUTED);
+        toggle.setBackground(bg(on ? TEAL_SOFT : Color.rgb(247, 249, 250),
+                on ? TEAL_SOFT : BORDER, 13));
+        timeButton.setEnabled(on);
+        timeButton.setAlpha(on ? 1f : .45f);
+        timeButton.setText(String.format(Locale.getDefault(), "⏰ %02d:%02d",
+                reminderTime[0], reminderTime[1]));
+    };
 
-        timeButton.setOnClickListener(v -> new TimePickerDialog(this, (view, hour, minute) -> {
-            reminderTime[0] = hour;
-            reminderTime[1] = minute;
-            reminderEnabled[0] = true;
-            refreshReminder.run();
-        }, reminderTime[0], reminderTime[1], true).show());
+    toggle.setOnClickListener(v -> {
+        reminderEnabled[0] = !reminderEnabled[0];
+        refreshReminder.run();
+    });
 
-        space(form, 20);
-        Button save = primary("Görevi kaydet");
-        save.setOnClickListener(v -> {
-            String taskTitle = title.getText().toString().trim();
-            if (taskTitle.isEmpty()) {
-                title.setError("Başlık gerekli");
+    timeButton.setOnClickListener(v -> new TimePickerDialog(this, (view, hour, minute) -> {
+        reminderTime[0] = hour;
+        reminderTime[1] = minute;
+        reminderEnabled[0] = true;
+        refreshReminder.run();
+    }, reminderTime[0], reminderTime[1], true).show());
+    refreshReminder.run();
+
+    space(form, 20);
+    Button save = primary(editing ? "Değişiklikleri kaydet" : "Görevi kaydet");
+    save.setOnClickListener(v -> {
+        String taskTitle = title.getText().toString().trim();
+        if (taskTitle.isEmpty()) {
+            title.setError("Başlık gerekli");
+            return;
+        }
+
+        String selectedPeriod = periodIndex[0] == 1 ? TaskItem.WEEKLY :
+                periodIndex[0] == 2 ? TaskItem.MONTHLY : TaskItem.DAILY;
+        List<TaskItem> all = AppStore.loadTasks(this);
+        TaskItem savedTask;
+
+        if (editing) {
+            savedTask = findTask(all, existing.id);
+            if (savedTask == null) {
+                Toast.makeText(this, "Görev bulunamadı", Toast.LENGTH_SHORT).show();
+                tasks();
                 return;
             }
+            ReminderScheduler.cancel(this, savedTask.id);
+        } else {
+            savedTask = draft;
+            all.add(savedTask);
+        }
 
-            draft.title = taskTitle;
-            draft.period = periodIndex[0] == 1 ? TaskItem.WEEKLY :
-                    periodIndex[0] == 2 ? TaskItem.MONTHLY : TaskItem.DAILY;
-            draft.requiredCount = repeat[0];
-            draft.reminderEnabled = reminderEnabled[0];
-            draft.reminderHour = reminderTime[0];
-            draft.reminderMinute = reminderTime[1];
+        savedTask.title = taskTitle;
+        savedTask.period = selectedPeriod;
+        savedTask.requiredCount = repeat[0];
+        savedTask.reminderEnabled = reminderEnabled[0];
+        savedTask.reminderHour = reminderTime[0];
+        savedTask.reminderMinute = reminderTime[1];
 
-            List<TaskItem> all = AppStore.loadTasks(this);
-            all.add(draft);
-            AppStore.saveTasks(this, all);
-            if (draft.reminderEnabled) {
-                ReminderScheduler.schedule(this, draft);
-            }
-            Toast.makeText(this, "Görev eklendi", Toast.LENGTH_SHORT).show();
-            tasks();
-        });
-        form.addView(save);
-        page.addView(form);
+        AppStore.saveTasks(this, all);
+        if (savedTask.reminderEnabled) {
+            ReminderScheduler.schedule(this, savedTask);
+        }
+        Toast.makeText(this, editing ? "Görev güncellendi" : "Görev eklendi",
+                Toast.LENGTH_SHORT).show();
+        tasks();
+    });
+    form.addView(save);
+    page.addView(form);
 
-        space(page, 14);
-        LinearLayout preview = softCard(TEAL_SOFT);
-        preview.addView(head("Önizleme"));
-        TextView pv = body("Görev kaydedildiğinde listede ilerleme çubuğu, tekrar hedefi ve varsa hatırlatma saatiyle görünecek.");
-        pv.setTextColor(MUTED);
-        preview.addView(pv);
-        page.addView(preview);
+    space(page, 14);
+    LinearLayout preview = softCard(TEAL_SOFT);
+    preview.addView(head(editing ? "Düzenleme" : "Önizleme"));
+    TextView pv = body(editing ?
+            "Kaydettiğinde mevcut tamamlanma geçmişin korunur; başlık, periyot, tekrar ve hatırlatıcı güncellenir." :
+            "Görev kaydedildiğinde listede ilerleme çubuğu, tekrar hedefi ve varsa hatırlatma saatiyle görünecek.");
+    pv.setTextColor(MUTED);
+    preview.addView(pv);
+    page.addView(preview);
 
-        show(page, null);
-        navState();
-    }
+    show(page, null);
+    navState();
+}
 
     private void goals() {
         screen = GOALS;
         LinearLayout page = page();
 
         addBrandHeader(page, "Kısa, orta ve uzun vadeli hedeflerini tek yerde gör.");
-        page.addView(segmentTabs(false));
-        space(page, 18);
 
         List<GoalItem> all = AppStore.loadGoals(this);
         String[] names = {"Kısa vade", "Orta vade", "Uzun vade"};
@@ -761,22 +794,27 @@ public class MainActivity extends Activity {
             if (TaskItem.DAILY.equals(task.period)) {
                 for (LocalDate day = monday; !day.isAfter(sunday); day = day.plusDays(1)) {
                     if (day.isBefore(TimeUtils.toDate(task.createdAt))) continue;
-                    if (weekOffset == 0 && !day.isBefore(today)) {
-                        if (day.equals(today)) ongoing++;
-                        continue;
-                    }
+                    if (weekOffset == 0 && day.isAfter(today)) continue;
+
                     int count = TimeUtils.count(task.completions,
                             TimeUtils.atStart(day), TimeUtils.atEnd(day));
-                    if (count >= task.requiredCount) ok++;
-                    else fail++;
+                    if (weekOffset == 0 && day.equals(today)) {
+                        if (count >= task.requiredCount) ok++;
+                        else ongoing++;
+                    } else if (count >= task.requiredCount) {
+                        ok++;
+                    } else {
+                        fail++;
+                    }
                 }
             } else if (TaskItem.WEEKLY.equals(task.period)) {
-                if (weekOffset == 0) {
+                int count = TimeUtils.count(task.completions, weekStart, weekEnd);
+                if (weekOffset == 0 && count < task.requiredCount) {
                     ongoing++;
+                } else if (count >= task.requiredCount) {
+                    ok++;
                 } else {
-                    int count = TimeUtils.count(task.completions, weekStart, weekEnd);
-                    if (count >= task.requiredCount) ok++;
-                    else fail++;
+                    fail++;
                 }
             } else {
                 ongoing++;
@@ -888,23 +926,6 @@ public class MainActivity extends Activity {
         return card;
     }
 
-    private LinearLayout segmentTabs(boolean tasksActive) {
-        LinearLayout outer = row();
-        outer.setPadding(dp(4), dp(4), dp(4), dp(4));
-        outer.setBackground(bg(SURFACE, BORDER, 18));
-
-        Button tasksButton = segmentButton("☷  Yapılacaklar", tasksActive);
-        Button goalsButton = segmentButton("◎  Hedefler", !tasksActive);
-
-        tasksButton.setOnClickListener(v -> tasks());
-        goalsButton.setOnClickListener(v -> goals());
-
-        outer.addView(tasksButton, new LinearLayout.LayoutParams(0, dp(48), 1f));
-        spaceH(outer, 5);
-        outer.addView(goalsButton, new LinearLayout.LayoutParams(0, dp(48), 1f));
-        return outer;
-    }
-
     private void addBrandHeader(LinearLayout page, String subtitleText) {
         TextView brand = title("Planım");
         brand.setTextSize(32);
@@ -919,9 +940,12 @@ public class MainActivity extends Activity {
         LinearLayout row = row();
         row.setGravity(Gravity.CENTER_VERTICAL);
 
-        Button back = compactButton("←", Color.TRANSPARENT, TEXT);
+        Button back = compactButton("←", Color.rgb(247, 249, 250), TEXT);
+        back.setTextSize(22);
+        back.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         back.setOnClickListener(v -> backAction.run());
-        row.addView(back, new LinearLayout.LayoutParams(dp(48), dp(46)));
+        row.addView(back, new LinearLayout.LayoutParams(dp(56), dp(52)));
+        spaceH(row, 4);
 
         TextView title = head(titleText);
         title.setTextSize(23);
